@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <title>
+        C++内存管理 - 月与竹柏 
+    </title>
+     
+    
+<link rel="stylesheet" href="/css/grid.css">
+
+    
+<link rel="stylesheet" href="/css/custom.css">
+
+    
+<link rel="stylesheet" href="/css/ringo.css">
+
+     
+        <link rel="icon" type="image/x-icon" href="/img/favicon.ico " />
+     
+     
+     
+        <meta name=" " content="" />
+     
+        <meta name=" " content="" />
+     
+ 
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+  <body>
+    <header id="header" class="clearfix" onclick="window.open('/', '_self')">
+    <div class="site-name">
+        <a href="/" id="logo" class="site-title">
+            月与竹柏
+        </a>
+        <p class="description site-description">
+            <span style="padding-top:20px; font-size: 10px">
+                
+            </span>
+        </p>
+    </div>
+</header>
+<div id="sidebar" role="complementary">
+    <section class="widget">
+        <ul class="menu widget-list">
+            
+                <li class="menu-item">
+                    <a href="/" class="menu-item-link">
+                        主页
+                    </a>
+                </li>
+                
+                <li class="menu-item">
+                    <a href="/about" class="menu-item-link">
+                        关于
+                    </a>
+                </li>
+                
+                <li class="menu-item">
+                    <a href="/archives" class="menu-item-link">
+                        归档
+                    </a>
+                </li>
+                
+        </ul>
+    </section>
+    <section class="widget sidebar-foot">
+        <ul class="widget-list">
+            <li><!-- heme <a rel="nofollow" target="_blank" href="https://github.com/HeliumOI/hexo-theme-ringo">Ringo</a>
+                by  <a target="_blank" href="/ "> s1n </a>-->世事皆变，无物消亡 </li>
+            <!-- <li>Proudly powered by  <a rel="nofollow" target="_blank" href="https://hexo.io/">Hexo</a></li> -->
+        </ul>
+    </section>
+</div>
+
+<div id="helpbar">
+    <div class="back-to-top">
+        <button id="back2top">↑</button>
+        <script>
+            back2top.onclick = function() {
+                var movement = document.body.scrollTop || document.documentElement.scrollTop;
+                scrollBy(0, -movement);
+            }
+        </script>
+    </div>
+</div>
+      <main class="main">
+        <div id="body">
+          <div class="container">
+            <div class="col-12" id="main" role="main">
+    <article class="post post-atpost" itemscope itemtype="http://schema.org/BlogPosting">
+        <div class="post-title">
+            <h1 class="post-title post-title-atpage" itemprop="name headline">
+                <a itemprop="url" href="/2021/12/06/cpp-mem-manage/">
+                    C++内存管理
+                </a>
+            </h1>
+        </div>
+        <ul class="post-meta post-meta-atpage">
+            <li class="post-time">
+                2021-12-06
+            </li>
+            <li>
+                <div class="article-category">
+                    
+                </div>
+            </li>
+        </ul>
+        <div class="post-content" itemprop="articleBody">
+            <h2 id="C-memory-primitives"><a href="#C-memory-primitives" class="headerlink" title="C++ memory primitives"></a>C++ memory primitives</h2><table>
+<thead>
+<tr>
+<th>分配</th>
+<th>释放</th>
+<th>类属</th>
+<th>可否重载</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>malloc()</td>
+<td>free()</td>
+<td>C函数</td>
+<td>不可</td>
+</tr>
+<tr>
+<td>new</td>
+<td>delete</td>
+<td>C++表达式</td>
+<td>不可</td>
+</tr>
+<tr>
+<td>::operator new()</td>
+<td>::operator delete()</td>
+<td>C++函数</td>
+<td>可</td>
+</tr>
+<tr>
+<td>allocator<T>::allocate()</td>
+<td>allocator<T>::deallocate()</td>
+<td>C++标准库</td>
+<td>可自由设计并以之搭配任何容器</td>
+</tr>
+</tbody></table>
+<p>四种memory primitives的用例如下</p>
+<pre><code class="c++">void * p1 = malloc ( 512 ); //512bytes
+free ( p1 );
+
+complex&lt;int&gt; * p2 = new complex&lt;int&gt;; //one object
+delete p2;
+
+void * p3 = ::operator new ( 512 ); //512bytes
+::operator delete ( p3 );
+
+/*
+ * 以下使用C++标准库提供的allocator
+ * 虽然其接口有标准规则，但实际上各个编译器的实现并未完全遵守，略有不同
+ */
+
+#ifdef _MSV_VER
+    //以下两个函数都是non-static，一定要通过object调用
+    int * p4 = allocator&lt;int&gt;().allocate ( 3, (int *)0 );//这里通过临时对象，分配三个int
+    allocator&lt;int&gt;.deallocate ( p4, 3 );
+#endif
+#ifdef __BORLANC__
+    //以下两个函数都是non-static，一定要通过object调用
+    int * p4 = allocator&lt;int&gt;().allocate ( 5 );//分配五个int
+    allocator&lt;int&gt;.deallocate ( p4, 5 ); 
+#endif
+#ifdef __GNUC__
+    //旧版GUNC的实现 以下两个函数都是static，可以通过全名调用
+    void * p4 = alloc::allocate ( 512 );//分配512byte
+    alloc::deallocate ( p4, 512 );
+#endif
+</code></pre>
+<p>更新版本GUNC的allocator用例</p>
+<pre><code class="c++">#ifdef __GNUC__
+    //以下两个函数都是non-static，一定要通过object调用
+    int * p4 = allocator&lt;int&gt;().allocate ( 7 );//分配七个int
+    allocator&lt;int&gt;.deallocate ( （int *)p4, 5 ); 
+    //以下两个函数都是non-static，一定要通过object调用
+    int * p5 = __gnu_cxx::__pool_alloc&lt;int&gt;().allocate ( 9 );//分配九个int
+    __gnu_cxx::__pool_alloc&lt;int&gt;().deallocate ( (int *)p5, 9 );
+#endif
+</code></pre>
+<h3 id="new"><a href="#new" class="headerlink" title="new"></a>new</h3><p>当执行如下语句<code>Complex * pc = new Complex ( 1, 2 )</code>时<code>new</code>究竟做了什么</p>
+<pre><code class="c++">Complex * pc;
+try &#123;
+    void * mem = operator new ( sizeof ( Complex ) );//allocate
+    pc = static_cast&lt;Complex*&gt; ( mem ); //cast
+    pc-&gt;Complex::Complex ( 1, 2 ); //construct
+    //通常只有编译器可以向上面一样直接调用构造函数，但是通过使用placement new可以直接调用
+&#125;
+catch ( std::bad_alloc ) &#123;
+    //alloc失败
+&#125;
+</code></pre>
+<p>其中<code>operator new</code>一种在<code>vc98\crt\src\newop2.cpp</code>中比较古老的实现如下</p>
+<pre><code class="c++">/*
+ * std::nothrow_t
+ * this struct is used as a function parameter
+ * to operator new to indicate that the function
+ * should return a null pointer to report an 
+ * allocation failure, rather than throw an
+ * exception.
+ */
+
+void * operator new ( size_t size, const std::nothrow_t &amp; )
+                    _THROW0()
+&#123; // try to allocate size bytes
+    void * p;
+    while ( ( p = malloc ( size ) ) == 0 )
+    &#123; // buy more memory or return null pointer
+      /* malloc发生失败的情况将很难出现，
+         通常情况只有当内存被耗尽时才会出
+         现这种情况 */
+        _TRY_BEGIN
+            /*__callnewh是一种可以由程序员自行设定的函数
+              当malloc失败后，将会尝试通过调用该函数来进行
+              内存操作，因此可以在这里尝试释放一些不需要的
+              内存*/
+            if ( _callnewh ( size ) == 0 ) break;
+        _CATCH ( std::bad_alloc ) return ( 0 );
+        _CATCH_END
+    &#125;
+    return ( p );
+&#125;
+</code></pre>
+<h3 id="delete"><a href="#delete" class="headerlink" title="delete"></a>delete</h3><p>再来分析<code>delete pc</code></p>
+<pre><code class="c++">pc-&gt;~Complex(); // deconstruct
+operator delete ( pc ); // deallocate
+</code></pre>
+<p><code>operator delete</code>在<code>vc98\crt\src\delop.cpp</code>中的实现如下</p>
+<pre><code class="c++">void __cdecl operator delete ( void * p ) _THROW0()
+&#123; //free an allocate object
+    free ( p );
+&#125;
+</code></pre>
+<h3 id="Ctor-amp-Dtor-直接调用"><a href="#Ctor-amp-Dtor-直接调用" class="headerlink" title="Ctor &amp; Dtor 直接调用"></a>Ctor &amp; Dtor 直接调用</h3><p>使用STL类进行一些简单的测试如下：</p>
+<pre><code class="c++">string * pstr = new string;
+cout &lt;&lt; &quot;str = &quot; &lt;&lt; *pstr &lt;&lt; endl;
+/* g++
+ * error: &#39;class std::__cxx11::basic_string&lt;char&gt;&#39; 
+ * has no member named &#39;string&#39;
+ */
+pstr-&gt;string::string ( &quot;test&quot; );
+/* g++
+ * 正常运行，输出结果如下
+ * str = 
+ * str = 
+ */
+pstr-&gt;~string();
+cout &lt;&lt; &quot;str = &quot; &lt;&lt; *pstr &lt;&lt; endl;
+</code></pre>
+<p>通过自建类来进行更详细的测试如下：</p>
+<pre><code class="c++">A * pA =new A(1);
+cout &lt;&lt; pA-&gt;id &lt;&lt; endl; // 1
+// g++无法编译 error: cannot call constructor &#39;A::A&#39; directly 
+pA-&gt;A::A(3);
+// 同样无法编译 error: cannot call constructor &#39;A::A&#39; directly 
+A::A(3);
+</code></pre>
+<p>如此看来似乎无法直接调用构造函数 #TODO</p>
+<h3 id="array-new"><a href="#array-new" class="headerlink" title="array new"></a>array new</h3>
+             
+        </div>
+        
+    </article>
+    <div class="post-near">
+    <div class="post-near-child post-near-child-left "> 
+        
+            <a href="/2021/12/06/hello-world/">Hello World &laquo; </a>
+        
+        <br /> Prev  &laquo;
+    </div>
+    <div class="post-near-child post-near-child-right">
+        
+            <a>None</a>
+        
+        <br /> &raquo; Next 
+    </div>
+</div>
+</div>
+             
+<div id="comments">
+     
+</div>
+ 
+            <footer id="footer" role="contentinfo">
+    
+        &copy; 2020 - 2021
+        <br />
+    
+    
+    <br />
+    
+    
+</footer>
+          </div>
+        </div>
+      </main>
+      <!-- highlight support -->
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/styles/default.min.css">
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/highlight.min.js"></script>
+ 
+<script>
+        hljs.initHighlightingOnLoad();
+</script>
+ 
+<!-- prettify support -->
+ 
+<!-- mathjax support -->
+
+<!-- fancybox support -->
+ 
+<!-- viewerjs support -->
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.0/dist/viewer.min.css">
+
+
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.0/dist/viewer.min.js"></script>
+
+<script type="text/javascript">
+    Viewer.setDefaults({
+        zoomRatio: [0.5],
+        show: function () {
+            this.viewer.zoomTo(1);
+        },
+    });
+    
+    var imageList = document.querySelector('.post-content').getElementsByTagName('img');
+    
+    var imageArray = new Array();
+    Array.prototype.forEach.call(imageList, element => {
+        if (element.alt != "no-view" && element.className != "no-view") {
+            imageArray.push(element);
+        }
+    });
+    
+    Array.prototype.forEach.call(imageArray, element => {
+        var viewer1 = new Viewer(element);
+        viewer1.images = imageArray;
+        viewer1.length = imageArray.length;
+    });
+</script>
+ 
+<!-- google analytics support -->
+
+
+
+ 
+ 
+
+<!-- lazyload support -->
+
+    
+<script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.4.0/dist/lazyload.min.js"></script>
+
+<script>
+    new LazyLoad({
+        elements_selector: '.post-content img'
+    });
+</script>
+ 
+  </body>
+
+</html>
