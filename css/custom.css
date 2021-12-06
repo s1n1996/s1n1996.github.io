@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@300&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Slab&display=swap");
 body {
   font-family: 'Roboto Slab', 'Merriweather', Georgia, Palatino, "Palatino Linotype", "Palatino LT STD", source-han-serif-sc, "Source Han Serif SC", "Source Han Serif CN", "Source Han Serif TC", "Source Han Serif TW", "Source Han Serif", "Songti SC", "Times New Roman", "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN", "WenQuanYi Micro Hei", "Microsoft Yahei", Microsoft YaHei;
   zoom: 0.95;
@@ -200,7 +202,6 @@ pre code {
   display: none !important;
 }
 .post-title {
-  color: rgba(112,13,13,0.4);
   margin: 0.5em 0;
 }
 .post-title>a {
@@ -240,14 +241,12 @@ pre code {
   text-decoration: none;
 }
 .post-title {
-  color: rgba(112,13,13,0.4);
   font-size: 22px;
 }
 .post-meta {
   margin-top: 0 !important;
 }
 .post-title-atpage {
-  color: rgba(112,13,13,0.4);
   font-size: 26px;
   margin-top: 32px;
   text-align: center;
